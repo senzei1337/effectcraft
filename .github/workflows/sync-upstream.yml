@@ -1,0 +1,26 @@
+# Keeps this fork's main branch in sync with the original project (storytold/effectcraft).
+# Runs once a day, and can also be started by hand from the Actions tab.
+name: Sync fork with upstream
+
+on:
+  schedule:
+    - cron: "17 3 * * *" # daily, 03:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    # Only run in the fork, never in the original project.
+    if: github.repository == 'senzei1337/effectcraft'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge upstream changes into main
+        env:
+          # Optional SYNC_TOKEN secret is only needed when upstream changes workflow files.
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN || github.token }}
+        run: |
+          gh api --method POST "repos/${{ github.repository }}/merge-upstream" \
+            -f branch=main \
+            --jq '"Result: \(.merge_type) - \(.message)"'
